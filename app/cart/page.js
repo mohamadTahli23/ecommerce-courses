@@ -1,16 +1,35 @@
 "use client";
 import React, { useContext } from "react";
 import { CartContext } from "../context/CartContext";
+import cartApis from "../_utils/cartApis";
+import { useRouter } from "next/navigation";
 
 function Cart() {
   const { cart, setCart } = useContext(CartContext);
+  const router = useRouter();
+
   const getTotalAmount = () => {
     let totalAmount = 0;
     cart.forEach((item) => {
       totalAmount = totalAmount + Number(item?.product?.attributes?.price);
     });
-    return totalAmount;
+    return totalAmount.toFixed(2);
   };
+
+  const deleteCartItemFromList = (id) => {
+    cartApis
+      .deleteCartItem(id)
+      .then((res) => {
+        if (res)
+          setCart((oldCart) =>
+            oldCart.filter((item) => item.id !== res?.data?.data?.id)
+          );
+      })
+      .catch((error) => {
+        console.log("Error", error);
+      });
+  };
+
   return (
     <section>
       <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -56,7 +75,12 @@ function Cart() {
                       </dd>
                     </div>
 
-                    <button className="text-gray-600 transition hover:text-red-600">
+                    <button
+                      onClick={() => {
+                        deleteCartItemFromList(item?.id);
+                      }}
+                      className="text-gray-600 transition hover:text-red-600"
+                    >
                       <span className="sr-only">Remove item</span>
 
                       <svg
@@ -89,15 +113,20 @@ function Cart() {
                 </dl>
 
                 <div className="flex justify-end">
-                  <a
-                    href="#"
+                  <button
+                    onClick={() =>
+                      router.push(`/checkout?amount=${getTotalAmount()}`)
+                    }
                     className="block rounded bg-gray-700 px-5 py-3 text-sm text-gray-100 transition hover:bg-gray-600"
                   >
                     Checkout
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
+            <h2 className="text-gray-400 text-[12px]">
+              Note: All Item Will Be Sent Via Email
+            </h2>
           </div>
         </div>
       </div>
